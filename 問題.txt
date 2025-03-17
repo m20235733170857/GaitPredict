@@ -1,0 +1,23 @@
+1.雖然加入GPU，讓predict_data10step降到約0.07~0.12s，但再加上detectHS執行時間約要0.12~0.15s，再加上資料處理，約會0.19s到0.25s
+
+A:
+ numpy 和 TensorFlow 之间反复转换，最好方法式都在GPU做計算，減少I/O問題
+
+
+2.MinMaxScaler問題
+
+3.中斷問題
+
+3.1 當收到新指令時，若程式正在計步（例如 MONITOR_Right 狀態），計步循環不會立即停止，而是繼續運行直到步數達到 10 或被強制條件觸發
+
+A:
+
+3.2收到另一隻腳的指令（例如“ready to predict left leg”）：立即結束當前所有預測與計步
+
+
+
+
+------------------
+流程:
+
+當收到 "ready to predict right leg" -> 啟動start_prediction_thread(啟動持續預測執行緒) ->

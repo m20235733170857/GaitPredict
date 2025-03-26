@@ -1,0 +1,91 @@
+該文件為教學兩電腦，分別為Ubuntu與windows(python2)透過TCP溝通
+
+1.網路配置
+Windows 電腦：
+	進入「網路設定」，選擇「變更介面卡選項」。
+	右鍵點擊「乙太網路」，選擇「內容」。
+	選擇「第4版(TCP/IPv4)」。
+	選擇「使用下列的 IP 位址」，然後填寫以下資訊：
+		IP 位址：例如，192.168.1.1
+		子網路遮罩：通常為 255.255.255.0
+		預設閘道：通常為 192.168.1.254
+	選擇「使用下列的 DNS 伺服器位址」，並填寫：
+		慣用 DNS 伺服器：例如，8.8.8.8
+		替代 DNS 伺服器：例如，8.8.4.4
+		
+Ubuntu 電腦：
+	使用「ip a」cmd查看所有網路介面
+	找到您要配置的網路介面名稱-enp109s0
+	使用「sudo nano /etc/netplan/01-netcfg.yaml」cmd查看配置文件,改寫如以下
+	network:
+	  version: 2
+	  ethernets:
+	    enp0s3:
+	      addresses:
+		- 192.168.1.2/24
+	      gateway4: 192.168.1.1
+	      nameservers:
+		addresses:
+		  - 8.8.8.8
+		  - 8.8.4.4
+	
+	保存文件後，使用「sudo netplan apply」cmd配置
+	
+	
+2.測試
+Windows 電腦：
+	import socket
+
+	def start_client():
+	    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	    client_socket.connect(('192.168.1.2', 12345))
+
+	    try:
+		while True:
+		    message = "123"
+		    if message.lower() == 'exit':
+		        break
+		    client_socket.sendall(message.encode('utf-8'))
+		    data = client_socket.recv(1024)
+	    except Exception as e:
+		print u"發生錯誤：{}".format(e)
+	    finally:
+		client_socket.close()
+
+	if __name__ == "__main__":
+	    start_client()
+
+Ubuntu 電腦：
+	import socket
+
+	def start_server():
+	    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	    server_socket.bind(('192.168.1.2', 12345))
+	    server_socket.listen(1)
+	    print("伺服器已啟動，等待連接...")
+
+	    conn, addr = server_socket.accept()
+	    print(f"已連接：{addr}")
+
+	    try:
+		while True:
+		    data = conn.recv(1024)
+		    if not data:
+		        break
+		    print(f"收到資料：{data.decode()}")
+		    response = input("回覆：")
+		    conn.sendall(response.encode())
+	    except Exception as e:
+		print(f"發生錯誤：{e}")
+	    finally:
+		conn.close()
+		server_socket.close()
+
+	if __name__ == "__main__":
+	    start_server()
+	   
+
+
+	
+	
+

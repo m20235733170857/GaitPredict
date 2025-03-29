@@ -1,6 +1,6 @@
-該文件為教學兩電腦，分別為Ubuntu與windows(python2)透過TCP溝通
+該文件為教學兩電腦，分別為Ubuntu與windows(python2)透過TCP溝通，並將兩設備時間統一
 
-1.網路配置
+1.1網路配置
 Windows 電腦：
 	進入「網路設定」，選擇「變更介面卡選項」。
 	右鍵點擊「乙太網路」，選擇「內容」。
@@ -32,7 +32,7 @@ Ubuntu 電腦：
 	保存文件後，使用「sudo netplan apply」cmd配置
 	
 	
-2.測試
+1.2測試
 Windows 電腦：
 	import socket
 
@@ -85,7 +85,39 @@ Ubuntu 電腦：
 	    start_server()
 	   
 
+2.1同步兩台電腦（分別為 Windows 和 Ubuntu）的時間
+
+在 Ubuntu 上設置 NTP 伺服器：
+	sudo apt-get update
+	sudo apt-get install ntp
+	
+配置 NTP 伺服器：
+	sudo vim /etc/ntp.conf
+	
+在文件中，找到並註解掉（在行首添加 #）所有以 pool 或 server 開頭的行，這些行通常指向外部時間伺服器。
+添加以下行，允許本地網路的電腦與該伺服器同步時間（假設您的本地網路是 192.168.1.0/24）：
+	restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap
+保存並關閉文件。
+
+重啟 NTP 服務：
+	sudo systemctl restart ntp
 
 	
-	
+配置 Windows 時間服務:
+
+按下 Win + R，輸入 services.msc，按下 Enter。
+在服務列表中找到 Windows Time，右鍵點擊並選擇 屬性。
+將啟動類型設置為 自動，然後點擊 啟動 按鈕啟動服務。
+
+設置 NTP 伺服器：
+打開命令提示字元（以管理員身份運行）。
+執行以下命令，將 NTP 伺服器設置為 Ubuntu 電腦的 IP 地址（假設為 192.168.1.2）：
+	w32tm /config /manualpeerlist:192.168.1.2 /syncfromflags:manual /reliable:YES /update
+
+執行以下命令重新同步時間：
+	w32tm /resync
+
+驗證同步狀態
+在命令提示字元中執行：
+	w32tm /query /status
 
